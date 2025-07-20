@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 
-const GITHUB_PAT = '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'; // Optional: Add GitHub token here
+const GITHUB_PAT = process.env.REACT_APP_GITHUB_PAT; // Optional: Add GitHub token here
 
 const SearchTalent = () => {
     const [skill, setSkill] = useState('');
