@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Brain, Briefcase, Star, Zap, User, CheckCircle } from 'lucide-react';
 
 // Configuration for Gemini AI
@@ -31,19 +31,20 @@ const generateCandidates = (count = 15) => {
     });
 };
 
-const StaffingApp = () => {
-    const [activeTab, setActiveTab] = useState('hr');
-    const [projectTitle, setProjectTitle] = useState('');
-    const [projectDescription, setProjectDescription] = useState('');
-    const [chunks, setChunks] = useState([]);
-    const [candidates, setCandidates] = useState([]);
-    const [rankings, setRankings] = useState({});
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        setCandidates(generateCandidates());
-    }, []);
-
+const HRDashboard = ({
+                         projectTitle,
+                         setProjectTitle,
+                         projectDescription,
+                         setProjectDescription,
+                         chunks,
+                         setChunks,
+                         candidates,
+                         setCandidates,
+                         rankings,
+                         setRankings,
+                         loading,
+                         setLoading
+                     }) => {
     // Fallback chunk generation based on common project patterns
     const generateSmartChunks = () => {
         if (!projectTitle || !projectDescription) {
@@ -104,7 +105,7 @@ const StaffingApp = () => {
         setLoading(true);
         try {
             const prompt = `Break down this project into 4-6 manageable chunks/tasks:
-      
+  
 Project: ${projectTitle}
 Description: ${projectDescription}
 
@@ -196,21 +197,6 @@ Format as JSON array with objects containing: title, description, requiredSkills
         }));
     };
 
-    const toggleCandidateChunk = (candidateId, chunkId) => {
-        setCandidates(candidates.map(candidate => {
-            if (candidate.id === candidateId) {
-                const selected = candidate.selectedChunks.includes(chunkId);
-                return {
-                    ...candidate,
-                    selectedChunks: selected
-                        ? candidate.selectedChunks.filter(id => id !== chunkId)
-                        : [...candidate.selectedChunks, chunkId]
-                };
-            }
-            return candidate;
-        }));
-    };
-
     const calculateCandidateScore = (candidate, chunk) => {
         if (!candidate.selectedChunks.includes(chunk.id)) return 0;
 
@@ -260,9 +246,9 @@ Format as JSON array with objects containing: title, description, requiredSkills
         setRankings(newRankings);
     };
 
-    const HRDashboard = () => (
+    return (
         <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="glass-card p-6 rounded-2xl">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                     <Briefcase className="w-5 h-5" />
                     Project Setup
@@ -275,7 +261,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
                             type="text"
                             value={projectTitle}
                             onChange={(e) => setProjectTitle(e.target.value)}
-                            className="w-full p-2 border rounded-md"
+                            className="w-full p-3 border border-gray-300 rounded-xl bg-white/80 backdrop-blur-sm transition-all hover:shadow-glow focus:shadow-glow focus:ring-0 focus:border-blue-400"
                             placeholder="Enter project title"
                         />
                     </div>
@@ -285,16 +271,16 @@ Format as JSON array with objects containing: title, description, requiredSkills
                         <textarea
                             value={projectDescription}
                             onChange={(e) => setProjectDescription(e.target.value)}
-                            className="w-full p-2 border rounded-md h-24"
+                            className="w-full p-3 border border-gray-300 rounded-xl bg-white/80 backdrop-blur-sm transition-all hover:shadow-glow focus:shadow-glow focus:ring-0 focus:border-blue-400 h-24"
                             placeholder="Describe the project requirements and goals"
                         />
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap gap-3">
                         <button
                             onClick={generateChunksWithAI}
                             disabled={loading}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                            className="btn-glow flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-5 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 disabled:opacity-50"
                         >
                             <Brain className="w-4 h-4" />
                             {loading ? 'Generating...' : 'AI Generate Chunks'}
@@ -302,7 +288,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
 
                         <button
                             onClick={generateSmartChunks}
-                            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                            className="btn-glow flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-5 py-3 rounded-xl hover:from-purple-600 hover:to-indigo-700"
                         >
                             <Zap className="w-4 h-4" />
                             Smart Generate
@@ -310,7 +296,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
 
                         <button
                             onClick={addManualChunk}
-                            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                            className="btn-glow flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white px-5 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800"
                         >
                             Manual Add Chunk
                         </button>
@@ -319,23 +305,23 @@ Format as JSON array with objects containing: title, description, requiredSkills
             </div>
 
             {chunks.length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <div className="glass-card p-6 rounded-2xl">
                     <h3 className="text-lg font-semibold mb-4">Project Chunks</h3>
                     <div className="space-y-4">
                         {chunks.map(chunk => (
-                            <div key={chunk.id} className="border p-4 rounded-md">
+                            <div key={chunk.id} className="glass-card border border-white/30 p-4 rounded-xl transition-all hover:shadow-glow">
                                 <input
                                     type="text"
                                     value={chunk.title}
                                     onChange={(e) => updateChunk(chunk.id, 'title', e.target.value)}
-                                    className="w-full p-2 border rounded-md mb-2"
+                                    className="w-full p-3 mb-2 rounded-xl bg-white/70 backdrop-blur-sm border border-gray-300 focus:shadow-glow focus:outline-none"
                                     placeholder="Chunk title"
                                     autoComplete="off"
                                 />
                                 <textarea
                                     value={chunk.description}
                                     onChange={(e) => updateChunk(chunk.id, 'description', e.target.value)}
-                                    className="w-full p-2 border rounded-md mb-2"
+                                    className="w-full p-3 mb-2 rounded-xl bg-white/70 backdrop-blur-sm border border-gray-300 focus:shadow-glow focus:outline-none"
                                     placeholder="Chunk description"
                                     autoComplete="off"
                                 />
@@ -343,7 +329,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
                                     type="text"
                                     value={chunk.requiredSkills.join(', ')}
                                     onChange={(e) => updateChunk(chunk.id, 'requiredSkills', e.target.value)}
-                                    className="w-full p-2 border rounded-md mb-2"
+                                    className="w-full p-3 mb-2 rounded-xl bg-white/70 backdrop-blur-sm border border-gray-300 focus:shadow-glow focus:outline-none"
                                     placeholder="Required skills (comma-separated): JavaScript, React, Node.js, MongoDB"
                                     autoComplete="off"
                                 />
@@ -352,7 +338,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
                                     <select
                                         value={chunk.difficulty}
                                         onChange={(e) => updateChunk(chunk.id, 'difficulty', parseInt(e.target.value))}
-                                        className="border rounded px-2 py-1"
+                                        className="border rounded-xl px-3 py-2 bg-white/70 backdrop-blur-sm focus:shadow-glow focus:outline-none"
                                     >
                                         <option value={1}>1 - Easy</option>
                                         <option value={2}>2 - Simple</option>
@@ -363,7 +349,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {chunk.requiredSkills.map(skill => (
-                                        <span key={skill} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                                        <span key={skill} className="bg-blue-100/80 text-blue-800 px-3 py-1 rounded-xl text-sm backdrop-blur-sm">
                       {skill}
                     </span>
                                     ))}
@@ -374,7 +360,7 @@ Format as JSON array with objects containing: title, description, requiredSkills
 
                     <button
                         onClick={generateRankings}
-                        className="mt-4 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 flex items-center gap-2"
+                        className="btn-glow mt-4 bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-xl hover:from-green-600 hover:to-teal-700 flex items-center gap-2"
                     >
                         <Star className="w-4 h-4" />
                         Show Chunk Rankings
@@ -383,16 +369,16 @@ Format as JSON array with objects containing: title, description, requiredSkills
             )}
 
             {Object.keys(rankings).length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
+                <div className="glass-card p-6 rounded-2xl">
                     <h3 className="text-lg font-semibold mb-4">Candidate Rankings by Chunk</h3>
                     {chunks.map(chunk => (
                         <div key={chunk.id} className="mb-6">
                             <h4 className="font-medium text-lg mb-3">{chunk.title}</h4>
                             {rankings[chunk.id]?.length > 0 ? (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {rankings[chunk.id].slice(0, 5).map((item, index) => (
-                                        <div key={item.candidate.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded">
-                                            <div className="font-semibold text-lg">#{index + 1}</div>
+                                        <div key={item.candidate.id} className="flex items-center gap-4 p-4 glass-card rounded-xl transition-all hover:shadow-glow">
+                                            <div className="font-semibold text-lg text-indigo-600">#{index + 1}</div>
                                             <div className="flex-1">
                                                 <div className="font-medium">{item.candidate.name}</div>
                                                 <div className="text-sm text-gray-600">{item.candidate.email}</div>
@@ -413,32 +399,56 @@ Format as JSON array with objects containing: title, description, requiredSkills
             )}
         </div>
     );
+};
 
-    const CandidatePage = () => (
+const CandidatePage = ({
+                           chunks,
+                           candidates,
+                           setCandidates
+                       }) => {
+    const toggleCandidateChunk = (candidateId, chunkId) => {
+        setCandidates(candidates.map(candidate => {
+            if (candidate.id === candidateId) {
+                const selected = candidate.selectedChunks.includes(chunkId);
+                return {
+                    ...candidate,
+                    selectedChunks: selected
+                        ? candidate.selectedChunks.filter(id => id !== chunkId)
+                        : [...candidate.selectedChunks, chunkId]
+                };
+            }
+            return candidate;
+        }));
+    };
+
+    return (
         <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="glass-card p-6 rounded-2xl">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                     <Users className="w-5 h-5" />
                     Available Candidates ({candidates.length})
                 </h2>
 
-                <div className="grid gap-4">
+                <div className="grid gap-5">
                     {candidates.map(candidate => (
-                        <div key={candidate.id} className="border p-4 rounded-lg">
-                            <div className="flex justify-between items-start mb-3">
+                        <div key={candidate.id} className="glass-card border border-white/30 p-5 rounded-2xl transition-all hover:shadow-glow">
+                            <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 className="font-semibold text-lg">{candidate.name}</h3>
                                     <p className="text-gray-600">{candidate.email}</p>
                                     <p className="text-sm text-gray-500">{candidate.overallExperience} years experience</p>
                                 </div>
-                                <User className="w-8 h-8 text-gray-400" />
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500 rounded-full blur-sm opacity-30"></div>
+                                    <User className="relative w-8 h-8 text-blue-500" />
+                                </div>
                             </div>
 
                             <div className="mb-4">
                                 <h4 className="font-medium mb-2">Skills:</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {candidate.skills.map(skill => (
-                                        <span key={skill.name} className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                                        <span key={skill.name} className="bg-green-100/80 text-green-800 px-3 py-1 rounded-xl text-sm backdrop-blur-sm">
                       {skill.name} (L{skill.confidence}, {skill.experience}y)
                     </span>
                                     ))}
@@ -448,21 +458,21 @@ Format as JSON array with objects containing: title, description, requiredSkills
                             {chunks.length > 0 && (
                                 <div>
                                     <h4 className="font-medium mb-2">Available Chunks:</h4>
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {chunks.map(chunk => (
-                                            <label key={chunk.id} className="flex items-center gap-3 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                            <label key={chunk.id} className="flex items-center gap-3 p-3 glass-card rounded-xl cursor-pointer transition-all hover:shadow-glow">
                                                 <input
                                                     type="checkbox"
                                                     checked={candidate.selectedChunks.includes(chunk.id)}
                                                     onChange={() => toggleCandidateChunk(candidate.id, chunk.id)}
-                                                    className="w-4 h-4"
+                                                    className="w-4 h-4 accent-blue-500"
                                                 />
                                                 <div className="flex-1">
                                                     <div className="font-medium">{chunk.title}</div>
                                                     <div className="text-sm text-gray-600">{chunk.description}</div>
                                                 </div>
                                                 {candidate.selectedChunks.includes(chunk.id) && (
-                                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                                    <CheckCircle className="w-5 h-5 text-green-500" />
                                                 )}
                                             </label>
                                         ))}
@@ -475,37 +485,150 @@ Format as JSON array with objects containing: title, description, requiredSkills
             </div>
         </div>
     );
+};
+
+const StaffingApp = () => {
+    const [activeTab, setActiveTab] = useState('hr');
+    const [projectTitle, setProjectTitle] = useState('');
+    const [projectDescription, setProjectDescription] = useState('');
+    const [chunks, setChunks] = useState([]);
+    const [candidates, setCandidates] = useState([]);
+    const [rankings, setRankings] = useState({});
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setCandidates(generateCandidates());
+    }, []);
+
+    // Memoize the components to prevent unnecessary re-renders
+    const memoizedHRDashboard = useMemo(() => (
+        <HRDashboard
+            projectTitle={projectTitle}
+            setProjectTitle={setProjectTitle}
+            projectDescription={projectDescription}
+            setProjectDescription={setProjectDescription}
+            chunks={chunks}
+            setChunks={setChunks}
+            candidates={candidates}
+            setCandidates={setCandidates}
+            rankings={rankings}
+            setRankings={setRankings}
+            loading={loading}
+            setLoading={setLoading}
+        />
+    ), [projectTitle, projectDescription, chunks, candidates, rankings, loading]);
+
+    const memoizedCandidatePage = useMemo(() => (
+        <CandidatePage
+            chunks={chunks}
+            candidates={candidates}
+            setCandidates={setCandidates}
+        />
+    ), [chunks, candidates]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm border-b">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100">
+            <style jsx global>{`
+        @keyframes glow {
+          0% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); }
+          50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.8); }
+          100% { box-shadow: 0 0 5px rgba(99, 102, 241, 0.5); }
+        }
+        
+        .glow-animation {
+          animation: glow 2s infinite;
+        }
+        
+        .hover-glow:hover {
+          box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+        }
+        
+        .shadow-glow {
+          box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-glow {
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-glow:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+        
+        .glass-card {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+          transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+          transform: translateY(-3px);
+        }
+        
+        .bg-glow {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 400px;
+          background: radial-gradient(ellipse at top, rgba(224, 231, 255, 0.6), transparent 70%);
+          z-index: -1;
+        }
+        
+        .tab-glow {
+          position: relative;
+        }
+        
+        .tab-glow::after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #6366f1, #8b5cf6);
+          border-radius: 3px;
+          opacity: 0.8;
+          box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+        }
+      `}</style>
+
+            <div className="bg-glow"></div>
+
+            <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/50">
                 <div className="max-w-6xl mx-auto px-4 py-4">
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <Zap className="w-6 h-6 text-blue-600" />
+                        <div className="glow-animation p-1 rounded-full">
+                            <Zap className="w-6 h-6 text-blue-600" />
+                        </div>
                         AI Staffing Solution
                     </h1>
                 </div>
             </header>
 
-            <nav className="bg-white border-b">
+            <nav className="bg-white/80 backdrop-blur-sm border-b border-white/50">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex space-x-8">
                         <button
                             onClick={() => setActiveTab('hr')}
-                            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-4 px-1 font-medium text-sm relative ${
                                 activeTab === 'hr'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'text-blue-600 tab-glow'
+                                    : 'text-gray-500 hover:text-blue-500'
                             }`}
                         >
                             HR Dashboard
                         </button>
                         <button
                             onClick={() => setActiveTab('candidates')}
-                            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                            className={`py-4 px-1 font-medium text-sm relative ${
                                 activeTab === 'candidates'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'text-blue-600 tab-glow'
+                                    : 'text-gray-500 hover:text-blue-500'
                             }`}
                         >
                             Candidates
@@ -514,9 +637,9 @@ Format as JSON array with objects containing: title, description, requiredSkills
                 </div>
             </nav>
 
-            <main className="max-w-6xl mx-auto px-4 py-6">
-                {activeTab === 'hr' && <HRDashboard />}
-                {activeTab === 'candidates' && <CandidatePage />}
+            <main className="max-w-6xl mx-auto px-4 py-8">
+                {activeTab === 'hr' && memoizedHRDashboard}
+                {activeTab === 'candidates' && memoizedCandidatePage}
             </main>
         </div>
     );
